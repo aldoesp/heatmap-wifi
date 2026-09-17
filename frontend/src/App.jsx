@@ -441,9 +441,9 @@ function App() {
       </div>
 
       {/* Main layout */}
-      <div className="flex flex-1 min-h-[calc(100vh-46px)]">
+      <div className="flex flex-1 min-h-[calc(100vh-46px)] flex-col md:flex-row">
         {/* Sidebar */}
-        <div className="w-[290px] flex-shrink-0 border-r border-[var(--border)] p-3.5 flex flex-col gap-4 overflow-y-auto">
+        <div className="w-full md:w-[290px] flex-shrink-0 border-b md:border-b-0 md:border-r border-[var(--border)] p-3.5 flex flex-col gap-4 overflow-y-auto">
           
           {/* Background image upload */}
           <div className="flex flex-col gap-1.5">
@@ -626,8 +626,8 @@ function App() {
         </div>
 
         {/* Canvas stage */}
-        <div className="flex-1 flex items-center justify-center p-5 overflow-auto">
-          <div id="canvasWrap" className="relative border border-[var(--border)] bg-[#060906]" 
+        <div className="flex-1 flex items-center justify-center p-3 sm:p-5 overflow-auto">
+          <div id="canvasWrap" className="relative border border-[var(--border)] bg-[#060906] w-full max-w-[820px]" 
                style={{
                  backgroundImage: `linear-gradient(var(--border) 1px, transparent 1px) 0 0/40px 40px, linear-gradient(90deg, var(--border) 1px, transparent 1px) 0 0/40px 40px`
                }}>
@@ -636,7 +636,7 @@ function App() {
               width="820" 
               height="560" 
               onClick={handleCanvasClick}
-              className="block cursor-crosshair"
+              className="block cursor-crosshair w-full h-auto max-w-full"
             ></canvas>
           </div>
         </div>
