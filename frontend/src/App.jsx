@@ -432,44 +432,44 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Topbar */}
-      <div className="px-4 py-2.5 border-b border-[var(--border)] flex items-center justify-between flex-wrap gap-2">
-        <div className="text-[var(--accent)] font-bold flex items-center gap-2">
+      <div className="px-4 py-2.5 border-b border-(--border) flex items-center justify-between flex-wrap gap-2">
+        <div className="text-(--accent) font-bold flex items-center gap-2">
           rssi-heatmap <span className="animate-pulse">_</span>
-          <span className="border border-[var(--border)] text-[var(--muted)] px-1.5 py-0.5 rounded text-[10px]">prototype React</span>
+          <span className="border border-(--border) text-(--muted) px-1.5 py-0.5 rounded text-[10px]">prototype React</span>
         </div>
-        <div className="text-[var(--muted)] text-[11px]">clic sur le plan = nouveau point de mesure</div>
+        <div className="text-(--muted) text-[11px]">clic sur le plan = nouveau point de mesure</div>
       </div>
 
       {/* Main layout */}
       <div className="flex flex-1 min-h-[calc(100vh-46px)] flex-col md:flex-row">
         {/* Sidebar */}
-        <div className="w-full md:w-[290px] flex-shrink-0 border-b md:border-b-0 md:border-r border-[var(--border)] p-3.5 flex flex-col gap-4 overflow-y-auto">
+        <div className="w-full md:w-72.5 shrink-0 border-b md:border-b-0 md:border-r border-(--border) p-3.5 flex flex-col gap-4 overflow-y-auto">
           
           {/* Background image upload */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[var(--muted)] text-[11px] tracking-wide">PLAN DE FOND (optionnel)</label>
+            <label className="text-(--muted) text-[11px] tracking-wide">PLAN DE FOND (optionnel)</label>
             <input 
               type="file" 
               ref={bgInputRef}
               onChange={handleBgUpload}
               accept="image/*"
-              className="bg-[#050705] border border-[var(--border)] text-[var(--text)] text-[12px] py-1.5 px-2 rounded"
+              className="bg-[#050705] border border-(--border) text-(--text) text-[12px] py-1.5 px-2 rounded"
             />
             <div className="flex gap-2">
               <button 
                 onClick={handleClearBg}
-                className="flex-1 border border-[var(--muted)] text-[var(--text)] py-1.5 px-2 text-[12px] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+                className="flex-1 border border-(--muted) text-(--text) py-1.5 px-2 text-[12px] hover:border-(--accent) hover:text-(--accent) transition-colors"
               >
                 retirer image
               </button>
             </div>
           </div>
 
-          <div className="border-t border-[var(--border)] my-0.5"></div>
+          <div className="border-t border-(--border) my-0.5"></div>
 
           {/* Scale calibration */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[var(--muted)] text-[11px] tracking-wide">CALIBRATION D’ÉCHELLE</label>
+            <label className="text-(--muted) text-[11px] tracking-wide">CALIBRATION D’ÉCHELLE</label>
             <div className="flex gap-2">
               <input
                 type="number"
@@ -477,9 +477,9 @@ function App() {
                 step="0.1"
                 value={scaleDistanceInput}
                 onChange={(e) => setScaleDistanceInput(Number(e.target.value))}
-                className="flex-1 bg-[#050705] border border-[var(--border)] text-[var(--text)] text-[12px] py-1.5 px-2 rounded"
+                className="flex-1 bg-[#050705] border border-(--border) text-(--text) text-[12px] py-1.5 px-2 rounded"
               />
-              <span className="text-[var(--muted)] text-[11px] self-center">m</span>
+              <span className="text-(--muted) text-[11px] self-center">m</span>
             </div>
             <div className="flex gap-2">
               <button
@@ -488,49 +488,49 @@ function App() {
                   setCalibrationPoints([])
                   setCalibrationMode(true)
                 }}
-                className="flex-1 border border-[var(--accent)] text-[var(--accent)] py-1.5 px-2 text-[12px] hover:bg-[var(--accent)] hover:text-[#04150a] transition-colors"
+                className="flex-1 border border-(--accent) text-(--accent) py-1.5 px-2 text-[12px] hover:bg-(--accent) hover:text-[#04150a] transition-colors"
               >
                 mesurer l’échelle
               </button>
               <button
                 onClick={resetCalibration}
-                className="border border-[var(--border)] text-[var(--text)] py-1.5 px-2 text-[12px] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+                className="border border-(--border) text-(--text) py-1.5 px-2 text-[12px] hover:border-(--accent) hover:text-(--accent) transition-colors"
               >
                 reset
               </button>
             </div>
             {pixelsPerMeter > 0 ? (
-              <p className="text-[var(--accent)] text-[11px] leading-relaxed">
+              <p className="text-(--accent) text-[11px] leading-relaxed">
                 Échelle active : {pixelsPerMeter.toFixed(2)} px/m
               </p>
             ) : (
-              <p className="text-[var(--muted)] text-[11px] leading-relaxed">
+              <p className="text-(--muted) text-[11px] leading-relaxed">
                 Cliquez deux points sur le plan pour définir une distance réelle.
               </p>
             )}
             {calibrationMode && (
-              <p className="text-[var(--mid)] text-[11px] leading-relaxed">
+              <p className="text-(--mid) text-[11px] leading-relaxed">
                 Étape {calibrationPoints.length + 1}/2 : cliquez sur le premier point.
               </p>
             )}
             {calibrationReference && (
-              <p className="text-[var(--muted)] text-[11px] leading-relaxed">
+              <p className="text-(--muted) text-[11px] leading-relaxed">
                 Guide actif : {Number(scaleDistanceInput).toFixed(1)} m sur la carte
               </p>
             )}
             {calibrationError && (
-              <p className="text-[var(--warn)] text-[11px] leading-relaxed">{calibrationError}</p>
+              <p className="text-(--warn) text-[11px] leading-relaxed">{calibrationError}</p>
             )}
             <div className="flex gap-2">
               <button
                 onClick={exportCalibration}
-                className="flex-1 border border-[var(--muted)] text-[var(--text)] py-1.5 px-2 text-[12px] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+                className="flex-1 border border-(--muted) text-(--text) py-1.5 px-2 text-[12px] hover:border-(--accent) hover:text-(--accent) transition-colors"
               >
                 exporter
               </button>
               <button
                 onClick={() => calibrationInputRef.current?.click()}
-                className="flex-1 border border-[var(--muted)] text-[var(--text)] py-1.5 px-2 text-[12px] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+                className="flex-1 border border-(--muted) text-(--text) py-1.5 px-2 text-[12px] hover:border-(--accent) hover:text-(--accent) transition-colors"
               >
                 importer
               </button>
@@ -544,48 +544,48 @@ function App() {
             />
           </div>
 
-          <div className="border-t border-[var(--border)] my-0.5"></div>
+          <div className="border-t border-(--border) my-0.5"></div>
 
           {/* Network selector */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[var(--muted)] text-[11px] tracking-wide">RÉSEAU AFFICHÉ</label>
+            <label className="text-(--muted) text-[11px] tracking-wide">RÉSEAU AFFICHÉ</label>
             <select 
               value={network}
               onChange={(e) => setNetwork(e.target.value)}
-              className="bg-[#050705] border border-[var(--border)] text-[var(--text)] text-[12px] py-1.5 px-2 rounded focus:outline-none focus:border-[var(--accent)]"
+              className="bg-[#050705] border border-(--border) text-(--text) text-[12px] py-1.5 px-2 rounded focus:outline-none focus:border-(--accent)"
             >
               <option value="__best__">meilleur signal (tous réseaux)</option>
               {networks.map(n => (
                 <option key={n} value={n}>{n}</option>
               ))}
             </select>
-            <p className="text-[var(--muted)] text-[11px] leading-relaxed">
+            <p className="text-(--muted) text-[11px] leading-relaxed">
               "meilleur signal" = combine tous les réseaux détectés, utile pour une couverture globale.
             </p>
           </div>
 
-          <div className="border-t border-[var(--border)] my-0.5"></div>
+          <div className="border-t border-(--border) my-0.5"></div>
 
           {/* Points list */}
           <div>
-            <div className="text-[var(--accent)] text-[11px] tracking-wide mb-2">
+            <div className="text-(--accent) text-[11px] tracking-wide mb-2">
               POINTS DE MESURE ({points.length})
             </div>
-            <div className="flex flex-col gap-1.5 max-h-[220px] overflow-y-auto text-[11px]">
+            <div className="flex flex-col gap-1.5 max-h-55 overflow-y-auto text-[11px]">
               {points.map(p => {
                 const v = bestRssiForNetwork(p, network)
                 return (
                   <div 
                     key={p.id}
-                    className="flex justify-between items-center border border-[var(--border)] p-1.5 rounded"
+                    className="flex justify-between items-center border border-(--border) p-1.5 rounded"
                   >
                     <span>
                       #{p.id} {pixelsPerMeter > 0 ? `(${formatMeters(getPointRealPosition(p)?.x ?? 0)},${formatMeters(getPointRealPosition(p)?.y ?? 0)})` : `(${Math.round(p.x)},{Math.round(p.y)})`}{' '}
-                      <span className="text-[var(--accent)]">{v === null ? 'n/a' : v + 'dBm'}</span>
+                      <span className="text-(--accent)">{v === null ? 'n/a' : v + 'dBm'}</span>
                     </span>
                     <button 
                       onClick={() => handleDeletePoint(p.id)}
-                      className="px-1.5 py-0.5 text-[11px] border border-[var(--border)] hover:border-[var(--warn)] hover:text-[var(--warn)] transition-colors"
+                      className="px-1.5 py-0.5 text-[11px] border border-(--border) hover:border-(--warn) hover:text-(--warn) transition-colors"
                     >
                       x
                     </button>
@@ -599,35 +599,35 @@ function App() {
           <div className="flex gap-2">
             <button 
               onClick={handleExport}
-              className="flex-1 border border-[var(--muted)] text-[var(--text)] py-1.5 px-2 text-[12px] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors flex items-center justify-center gap-1"
+              className="flex-1 border border-(--muted) text-(--text) py-1.5 px-2 text-[12px] hover:border-(--accent) hover:text-(--accent) transition-colors flex items-center justify-center gap-1"
             >
               <Download size={12} /> exporter JSON
             </button>
             <button 
               onClick={handleClearAll}
-              className="border border-[var(--warn)] text-[var(--warn)] py-1.5 px-2 text-[12px] hover:bg-[var(--warn)] hover:text-[#04150a] transition-colors flex items-center justify-center gap-1"
+              className="border border-(--warn) text-(--warn) py-1.5 px-2 text-[12px] hover:bg-(--warn) hover:text-[#04150a] transition-colors flex items-center justify-center gap-1"
             >
               <Trash2 size={12} /> tout effacer
             </button>
           </div>
 
-          <div className="border-t border-[var(--border)] my-0.5"></div>
+          <div className="border-t border-(--border) my-0.5"></div>
 
           {/* Legend */}
-          <div className="flex items-center gap-2 text-[11px] text-[var(--muted)]">
+          <div className="flex items-center gap-2 text-[11px] text-(--muted)">
             <span>-90 dBm</span>
-            <div className="flex-1 h-2.5 rounded bg-gradient-to-r from-[#ff5555] via-[#ffd166] to-[#39ff88]"></div>
+            <div className="flex-1 h-2.5 rounded bg-linear-to-r from-[#ff5555] via-[#ffd166] to-[#39ff88]"></div>
             <span>-30 dBm</span>
           </div>
 
-          <p className="text-[var(--muted)] text-[11px] leading-relaxed">
+          <p className="text-(--muted) text-[11px] leading-relaxed">
             Sans lecture pour le réseau choisi, un point est traité comme signal absent (-95 dBm) dans l'interpolation — ça tire le heatmap vers le rouge autour des zones non couvertes.
           </p>
         </div>
 
         {/* Canvas stage */}
         <div className="flex-1 flex items-center justify-center p-3 sm:p-5 overflow-auto">
-          <div id="canvasWrap" className="relative border border-[var(--border)] bg-[#060906] w-full max-w-[820px]" 
+          <div id="canvasWrap" className="relative border border-(--border) bg-[#060906] w-full max-w-205"
                style={{
                  backgroundImage: `linear-gradient(var(--border) 1px, transparent 1px) 0 0/40px 40px, linear-gradient(90deg, var(--border) 1px, transparent 1px) 0 0/40px 40px`
                }}>
@@ -645,41 +645,41 @@ function App() {
       {/* Modal overlay */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-10">
-          <div className="bg-[var(--panel)] border border-[var(--accent)] w-[min(560px,92vw)] p-4 rounded flex flex-col gap-2.5">
-            <h3 className="text-[13px] text-[var(--accent)] m-0">nouveau point de mesure</h3>
-            <p className="text-[var(--muted)] text-[11px] leading-relaxed">
+          <div className="bg-(--panel) border border-(--accent) w-[min(560px,92vw)] p-4 rounded flex flex-col gap-2.5">
+            <h3 className="text-[13px] text-(--accent) m-0">nouveau point de mesure</h3>
+            <p className="text-(--muted) text-[11px] leading-relaxed">
               Colle ici le JSON de scan (sortie <code>termux-wifi-scaninfo</code>) pris à cet endroit.
             </p>
             <textarea 
               value={scanInput}
               onChange={(e) => setScanInput(e.target.value)}
               placeholder='[{"bssid":"...","ssid":"...","rssi":-55,...}]'
-              className="h-[220px] text-[11px] resize-vertical bg-[#050705] border border-[var(--border)] text-[var(--text)] p-2 rounded focus:outline-none focus:border-[var(--accent)]"
+              className="h-55 text-[11px] resize-vertical bg-[#050705] border border-(--border) text-(--text) p-2 rounded focus:outline-none focus:border-(--accent)"
             />
             <div className="flex justify-between items-center gap-2">
               <button 
                 onClick={handleScan}
                 disabled={isScanning}
-                className={`border border-[var(--accent)] text-[var(--accent)] py-1.5 px-2 text-[12px] transition-colors flex items-center gap-1 ${isScanning ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[var(--accent)] hover:text-[#04150a]'}`}
+                className={`border border-(--accent) text-(--accent) py-1.5 px-2 text-[12px] transition-colors flex items-center gap-1 ${isScanning ? 'opacity-50 cursor-not-allowed' : 'hover:bg-(--accent) hover:text-[#04150a]'}`}
               >
                 {isScanning ? 'Scan en cours...' : 'Scanner'}
               </button>
               <button 
                 onClick={handleFillExample}
-                className="border border-[var(--muted)] text-[var(--text)] py-1.5 px-2 text-[12px] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+                className="border border-(--muted) text-(--text) py-1.5 px-2 text-[12px] hover:border-(--accent) hover:text-(--accent) transition-colors"
               >
                 charger exemple (ton scan Zomatel)
               </button>
               <div className="flex gap-2">
                 <button 
                   onClick={handleCancelPoint}
-                  className="border border-[var(--border)] text-[var(--text)] py-1.5 px-2 text-[12px] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+                  className="border border-(--border) text-(--text) py-1.5 px-2 text-[12px] hover:border-(--accent) hover:text-(--accent) transition-colors"
                 >
                   annuler
                 </button>
                 <button 
                   onClick={handleConfirmPoint}
-                  className="border border-[var(--accent)] text-[var(--accent)] py-1.5 px-2 text-[12px] hover:bg-[var(--accent)] hover:text-[#04150a] transition-colors"
+                  className="border border-(--accent) text-(--accent) py-1.5 px-2 text-[12px] hover:bg-(--accent) hover:text-[#04150a] transition-colors"
                 >
                   ajouter le point
                 </button>
