@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Wifi, Map as MapIcon, Signal, Download, Trash2, X, Plus } from 'lucide-react'
 import { distancePixelsBetween, pixelsPerMeterFromDistance, pixelsToMeters } from './scale'
+import { parseJsonResponse, normalizeScanData } from './scan'
 import './App.css'
 
 // Example scan data from Zomatel
@@ -416,14 +417,24 @@ function App() {
     setScanError(null)
     try {
       const response = await fetch('/api/scan')
+      const text = await response.text()
+
       if (!response.ok) {
+        const payload = parseJsonResponse(text, 'Erreur HTTP du scan')
+        const normalized = normalizeScanData(payload)
+        if (normalized.length === 0 && payload && typeof payload === 'object' && payload.details) {
+          throw new Error(payload.details)
+        }
         throw new Error('Erreur HTTP: ' + response.status)
       }
-      const data = await response.json()
-      setScanInput(JSON.stringify(data, null, 2))
+
+      const payload = parseJsonResponse(text, 'Réponse de scan invalide')
+      const normalized = normalizeScanData(payload)
+      setScanInput(JSON.stringify(normalized, null, 2))
     } catch (err) {
-      setScanError(err.message)
-      alert('Erreur du scan: ' + err.message)
+      const message = err?.message || 'Erreur inconnue lors du scan.'
+      setScanError(message)
+      alert('Erreur du scan: ' + message)
     } finally {
       setIsScanning(false)
     }
