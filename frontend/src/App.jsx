@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Wifi, Map as MapIcon, Signal, Download, Trash2, X, Plus } from 'lucide-react'
+import { distancePixelsBetween, pixelsPerMeterFromDistance, pixelsToMeters } from './scale'
 import './App.css'
 
 // Example scan data from Zomatel
@@ -29,9 +30,16 @@ function App() {
   const [scanInput, setScanInput] = useState('')
   const [isScanning, setIsScanning] = useState(false)
   const [scanError, setScanError] = useState(null)
+  const [pixelsPerMeter, setPixelsPerMeter] = useState(0)
+  const [scaleDistanceInput, setScaleDistanceInput] = useState(5)
+  const [calibrationMode, setCalibrationMode] = useState(false)
+  const [calibrationPoints, setCalibrationPoints] = useState([])
+  const [calibrationReference, setCalibrationReference] = useState(null)
+  const [calibrationError, setCalibrationError] = useState('')
   
   const canvasRef = useRef(null)
   const bgInputRef = useRef(null)
+  const calibrationInputRef = useRef(null)
 
   // Utility functions
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
@@ -80,6 +88,19 @@ function App() {
     return Math.max(...matches.map(s => s.rssi))
   }
 
+  const formatMeters = (value) => {
+    if (!Number.isFinite(value)) return 'n/a'
+    return `${value.toFixed(1)} m`
+  }
+
+  const getPointRealPosition = (point) => {
+    if (!Number.isFinite(pixelsPerMeter) || pixelsPerMeter <= 0) return null
+    return {
+      x: pixelsToMeters(point.x, pixelsPerMeter),
+      y: pixelsToMeters(point.y, pixelsPerMeter),
+    }
+  }
+
   const getNetworks = () => {
     const set = new Set()
     points.forEach(p => (p.scans || []).forEach(s => set.add(s.ssid || '(caché)')))
@@ -87,6 +108,87 @@ function App() {
   }
 
   const networks = getNetworks()
+
+  const applyCalibration = (startPoint, endPoint) => {
+    const meters = Number(scaleDistanceInput)
+    if (!Number.isFinite(meters) || meters <= 0) {
+      setCalibrationError('Saisis une distance réelle valide en mètres pour calibrer l’échelle.')
+      return
+    }
+
+    const pixels = distancePixelsBetween(startPoint, endPoint)
+    const nextPixelsPerMeter = pixelsPerMeterFromDistance(pixels, meters)
+
+    if (!Number.isFinite(nextPixelsPerMeter) || nextPixelsPerMeter <= 0) {
+      setCalibrationError('La distance mesurée est trop courte pour calibrer l’échelle.')
+      return
+    }
+
+    setPixelsPerMeter(nextPixelsPerMeter)
+    setCalibrationMode(false)
+    setCalibrationPoints([])
+    setCalibrationError('')
+  }
+
+  const resetCalibration = () => {
+    setPixelsPerMeter(0)
+    setCalibrationMode(false)
+    setCalibrationPoints([])
+    setCalibrationReference(null)
+    setCalibrationError('')
+  }
+
+  const exportCalibration = () => {
+    const payload = {
+      version: 1,
+      pixelsPerMeter,
+      distanceMeters: Number(scaleDistanceInput),
+      calibrationReference,
+      exportedAt: new Date().toISOString(),
+    }
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'wifi-calibration.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const importCalibration = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result)
+        const nextPixelsPerMeter = Number(data.pixelsPerMeter)
+        const nextDistanceMeters = Number(data.distanceMeters ?? data.scaleDistanceInput ?? scaleDistanceInput)
+
+        if (!Number.isFinite(nextPixelsPerMeter) || nextPixelsPerMeter <= 0) {
+          throw new Error('Le fichier de calibration ne contient pas un ratio px/m valide.')
+        }
+
+        if (!Number.isFinite(nextDistanceMeters) || nextDistanceMeters <= 0) {
+          throw new Error('Le fichier de calibration ne contient pas une distance réelle valide.')
+        }
+
+        setPixelsPerMeter(nextPixelsPerMeter)
+        setScaleDistanceInput(nextDistanceMeters)
+        setCalibrationReference(data.calibrationReference || null)
+        setCalibrationMode(false)
+        setCalibrationPoints([])
+        setCalibrationError('')
+      } catch (err) {
+        setCalibrationError(err.message || 'Fichier de calibration invalide.')
+      } finally {
+        event.target.value = ''
+      }
+    }
+    reader.readAsText(file)
+  }
 
   // Canvas rendering
   useEffect(() => {
@@ -146,6 +248,40 @@ function App() {
       ctx.putImageData(imgData, 0, 0)
     }
 
+    const activeCalibration = calibrationReference || (calibrationMode && calibrationPoints.length === 2
+      ? { start: calibrationPoints[0], end: calibrationPoints[1], distanceMeters: Number(scaleDistanceInput), pixelsPerMeter: pixelsPerMeter > 0 ? pixelsPerMeter : pixelsPerMeterFromDistance(distancePixelsBetween(calibrationPoints[0], calibrationPoints[1]), Number(scaleDistanceInput)) }
+      : null)
+
+    if (calibrationMode && calibrationPoints.length > 0) {
+      const point = calibrationPoints[calibrationPoints.length - 1]
+      ctx.beginPath()
+      ctx.arc(point.x, point.y, 5, 0, Math.PI * 2)
+      ctx.fillStyle = '#ffd166'
+      ctx.fill()
+      ctx.strokeStyle = '#ffd166'
+      ctx.stroke()
+    }
+
+    if (activeCalibration) {
+      const { start, end, distanceMeters } = activeCalibration
+      const pxDistance = distancePixelsBetween(start, end)
+      ctx.beginPath()
+      ctx.moveTo(start.x, start.y)
+      ctx.lineTo(end.x, end.y)
+      ctx.strokeStyle = '#ffd166'
+      ctx.lineWidth = 2
+      ctx.setLineDash([10, 8])
+      ctx.stroke()
+      ctx.setLineDash([])
+
+      const centerX = (start.x + end.x) / 2
+      const centerY = (start.y + end.y) / 2
+      const label = `${distanceMeters.toFixed(1)} m · ${pixelsPerMeter > 0 ? pixelsPerMeter.toFixed(2) : (pxDistance / Math.max(distanceMeters, 0.1)).toFixed(2)} px/m`
+      ctx.font = '11px JetBrains Mono, monospace'
+      ctx.fillStyle = '#ffd166'
+      ctx.fillText(label, centerX + 10, centerY - 10)
+    }
+
     // Draw points
     points.forEach(p => {
       const v = bestRssiForNetwork(p, network)
@@ -157,12 +293,20 @@ function App() {
       ctx.strokeStyle = v === null ? '#666' : rssiToColor(v)
       ctx.stroke()
 
+      const realPos = getPointRealPosition(p)
       ctx.font = '10px JetBrains Mono, monospace'
       ctx.fillStyle = '#c8f0c8'
       const label = v === null ? 'n/a' : `${v}dBm`
-      ctx.fillText(label, p.x + 9, p.y + 3)
+      const textX = p.x + 9
+      const textY = p.y + 3
+      ctx.fillText(label, textX, textY)
+
+      if (realPos) {
+        ctx.fillStyle = '#9fe7ff'
+        ctx.fillText(`(${formatMeters(realPos.x)},${formatMeters(realPos.y)})`, p.x + 9, p.y + 16)
+      }
     })
-  }, [points, network, bgImage])
+  }, [points, network, bgImage, calibrationMode, calibrationPoints, calibrationReference, pixelsPerMeter, scaleDistanceInput])
 
   // Handle canvas click
   const handleCanvasClick = (e) => {
@@ -170,6 +314,24 @@ function App() {
     const rect = canvas.getBoundingClientRect()
     const x = (e.clientX - rect.left) * (canvas.width / rect.width)
     const y = (e.clientY - rect.top) * (canvas.height / rect.height)
+
+    if (calibrationMode) {
+      const nextPoint = { x, y }
+      const nextPoints = [...calibrationPoints, nextPoint]
+      setCalibrationPoints(nextPoints)
+
+      if (nextPoints.length === 2) {
+        const nextReference = {
+          start: nextPoints[0],
+          end: nextPoints[1],
+          distanceMeters: Number(scaleDistanceInput),
+        }
+        setCalibrationReference(nextReference)
+        applyCalibration(nextPoints[0], nextPoints[1])
+      }
+      return
+    }
+
     setPendingPoint({ x, y })
     setScanInput('')
     setIsModalOpen(true)
@@ -305,6 +467,85 @@ function App() {
 
           <div className="border-t border-[var(--border)] my-0.5"></div>
 
+          {/* Scale calibration */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[var(--muted)] text-[11px] tracking-wide">CALIBRATION D’ÉCHELLE</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={scaleDistanceInput}
+                onChange={(e) => setScaleDistanceInput(Number(e.target.value))}
+                className="flex-1 bg-[#050705] border border-[var(--border)] text-[var(--text)] text-[12px] py-1.5 px-2 rounded"
+              />
+              <span className="text-[var(--muted)] text-[11px] self-center">m</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setCalibrationError('')
+                  setCalibrationPoints([])
+                  setCalibrationMode(true)
+                }}
+                className="flex-1 border border-[var(--accent)] text-[var(--accent)] py-1.5 px-2 text-[12px] hover:bg-[var(--accent)] hover:text-[#04150a] transition-colors"
+              >
+                mesurer l’échelle
+              </button>
+              <button
+                onClick={resetCalibration}
+                className="border border-[var(--border)] text-[var(--text)] py-1.5 px-2 text-[12px] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+              >
+                reset
+              </button>
+            </div>
+            {pixelsPerMeter > 0 ? (
+              <p className="text-[var(--accent)] text-[11px] leading-relaxed">
+                Échelle active : {pixelsPerMeter.toFixed(2)} px/m
+              </p>
+            ) : (
+              <p className="text-[var(--muted)] text-[11px] leading-relaxed">
+                Cliquez deux points sur le plan pour définir une distance réelle.
+              </p>
+            )}
+            {calibrationMode && (
+              <p className="text-[var(--mid)] text-[11px] leading-relaxed">
+                Étape {calibrationPoints.length + 1}/2 : cliquez sur le premier point.
+              </p>
+            )}
+            {calibrationReference && (
+              <p className="text-[var(--muted)] text-[11px] leading-relaxed">
+                Guide actif : {Number(scaleDistanceInput).toFixed(1)} m sur la carte
+              </p>
+            )}
+            {calibrationError && (
+              <p className="text-[var(--warn)] text-[11px] leading-relaxed">{calibrationError}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={exportCalibration}
+                className="flex-1 border border-[var(--muted)] text-[var(--text)] py-1.5 px-2 text-[12px] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+              >
+                exporter
+              </button>
+              <button
+                onClick={() => calibrationInputRef.current?.click()}
+                className="flex-1 border border-[var(--muted)] text-[var(--text)] py-1.5 px-2 text-[12px] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+              >
+                importer
+              </button>
+            </div>
+            <input
+              ref={calibrationInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={importCalibration}
+            />
+          </div>
+
+          <div className="border-t border-[var(--border)] my-0.5"></div>
+
           {/* Network selector */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[var(--muted)] text-[11px] tracking-wide">RÉSEAU AFFICHÉ</label>
@@ -339,7 +580,7 @@ function App() {
                     className="flex justify-between items-center border border-[var(--border)] p-1.5 rounded"
                   >
                     <span>
-                      #{p.id} ({Math.round(p.x)},{Math.round(p.y)}){' '}
+                      #{p.id} {pixelsPerMeter > 0 ? `(${formatMeters(getPointRealPosition(p)?.x ?? 0)},${formatMeters(getPointRealPosition(p)?.y ?? 0)})` : `(${Math.round(p.x)},{Math.round(p.y)})`}{' '}
                       <span className="text-[var(--accent)]">{v === null ? 'n/a' : v + 'dBm'}</span>
                     </span>
                     <button 
