@@ -10,6 +10,13 @@ def rssi():
     data = json.loads(out)
     return jsonify({"ssid": data.get("ssid"), "rssi": data.get("rssi")})
 
+@app.route("/api/scan")
+def scan():
+    # Termux API : scan de tous les réseaux WiFi environnants
+    out = subprocess.check_output(["termux-wifi-scaninfo"])
+    data = json.loads(out)
+    return jsonify(data)
+
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve(path):

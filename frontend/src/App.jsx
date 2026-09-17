@@ -27,6 +27,8 @@ function App() {
   const [pendingPoint, setPendingPoint] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [scanInput, setScanInput] = useState('')
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanError, setScanError] = useState(null)
   
   const canvasRef = useRef(null)
   const bgInputRef = useRef(null)
@@ -241,9 +243,28 @@ function App() {
     reader.readAsDataURL(file)
   }
 
-  // Handle clear background
+  // Handle background clear
   const handleClearBg = () => {
     setBgImage(null)
+  }
+
+  // Handle scan button click
+  const handleScan = async () => {
+    setIsScanning(true)
+    setScanError(null)
+    try {
+      const response = await fetch('/api/scan')
+      if (!response.ok) {
+        throw new Error('Erreur HTTP: ' + response.status)
+      }
+      const data = await response.json()
+      setScanInput(JSON.stringify(data, null, 2))
+    } catch (err) {
+      setScanError(err.message)
+      alert('Erreur du scan: ' + err.message)
+    } finally {
+      setIsScanning(false)
+    }
   }
 
   return (
@@ -394,7 +415,14 @@ function App() {
               placeholder='[{"bssid":"...","ssid":"...","rssi":-55,...}]'
               className="h-[220px] text-[11px] resize-vertical bg-[#050705] border border-[var(--border)] text-[var(--text)] p-2 rounded focus:outline-none focus:border-[var(--accent)]"
             />
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-2">
+              <button 
+                onClick={handleScan}
+                disabled={isScanning}
+                className={`border border-[var(--accent)] text-[var(--accent)] py-1.5 px-2 text-[12px] transition-colors flex items-center gap-1 ${isScanning ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[var(--accent)] hover:text-[#04150a]'}`}
+              >
+                {isScanning ? 'Scan en cours...' : 'Scanner'}
+              </button>
               <button 
                 onClick={handleFillExample}
                 className="border border-[var(--muted)] text-[var(--text)] py-1.5 px-2 text-[12px] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
