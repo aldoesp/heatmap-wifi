@@ -29,6 +29,7 @@ function App() {
   const [pendingPoint, setPendingPoint] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [scanInput, setScanInput] = useState('')
+  const [lastScanResult, setLastScanResult] = useState([])
   const [isScanning, setIsScanning] = useState(false)
   const [scanError, setScanError] = useState(null)
   const [pixelsPerMeter, setPixelsPerMeter] = useState(0)
@@ -415,6 +416,7 @@ function App() {
   const handleScan = async () => {
     setIsScanning(true)
     setScanError(null)
+    setLastScanResult([])
     try {
       const response = await fetch('/api/scan')
       const text = await response.text()
@@ -431,9 +433,15 @@ function App() {
       const payload = parseJsonResponse(text, 'Réponse de scan invalide')
       const normalized = normalizeScanData(payload)
       setScanInput(JSON.stringify(normalized, null, 2))
+      setLastScanResult(normalized)
+
+      if (normalized.length === 0) {
+        setScanError('Aucune valeur récupérée.')
+      }
     } catch (err) {
       const message = err?.message || 'Erreur inconnue lors du scan.'
       setScanError(message)
+      setLastScanResult([])
       alert('Erreur du scan: ' + message)
     } finally {
       setIsScanning(false)
@@ -695,6 +703,22 @@ function App() {
                   ajouter le point
                 </button>
               </div>
+            </div>
+
+            <div className="mt-2 border border-(--border) rounded p-2 bg-[#050705]">
+              <div className="text-[11px] text-(--accent) mb-2">Résultat du scan</div>
+              {lastScanResult.length === 0 ? (
+                <p className="text-[11px] text-(--muted) m-0">Aucune valeur récupérée.</p>
+              ) : (
+                <div className="max-h-28 overflow-y-auto space-y-1 text-[11px] text-(--text)">
+                  {lastScanResult.slice(0, 10).map((network, index) => (
+                    <div key={`${network.bssid ?? 'network'}-${index}`} className="flex justify-between gap-2">
+                      <span>{network.ssid || '(caché)'}</span>
+                      <span className="text-(--accent)">{network.rssi ?? 'n/a'} dBm</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
