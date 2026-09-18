@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, send_from_directory
 import subprocess, json, os
 
-app = Flask(__name__, static_folder="../frontend/build", static_url_path="/")
+app = Flask(__name__, static_folder="../frontend/dist", static_url_path="/")
 
 
 def safe_termux_json(command):
